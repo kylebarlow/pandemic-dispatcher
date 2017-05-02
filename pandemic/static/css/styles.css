@@ -1,0 +1,111 @@
+/*-------------------------
+  Simple reset
+--------------------------*/
+
+
+* {
+  margin:0;
+  padding:0;
+}
+
+
+/*-------------------------
+  General Styles
+--------------------------*/
+
+body{
+  font:15px/1.3 'Open Sans', Arial, Helvetica, sans-serif;
+  margin: 20px;
+}
+
+
+
+/* general */
+
+div.city-blue {
+  background: #0069AA;
+  color: #FFFFFF;
+  text-align: center;
+  border-radius: 3px !important;
+}
+
+div.city-red {
+  background: #E41937;
+  color: #FFFFFF;
+  text-align: center;
+  border-radius: 3px !important;
+}
+
+div.city-black {
+  background: #000000;
+  color: #FFFFFF;
+  text-align: center;
+  border-radius: 3px !important;
+}
+
+div.city-yellow {
+  background: #FFF56F;
+  color: #000000;
+  text-align: center;
+  border-radius: 3px !important;
+}
+
+
+/* game state */
+
+div.game-state {
+  font-size: larger;
+  text-align: right;
+}
+
+div.game-state > div.row {
+  margin: 2px;
+}
+
+div.game-state div.row.discard {
+  opacity: 0.4;
+}
+
+/* forms and buttons */
+
+
+.form-control {
+  height: auto;
+}
+
+div.btn {
+  margin: 2px;
+  border-radius: 3px !important;
+}
+
+div.btn.active {
+  opacity: 0.4;
+}
+
+div.month {
+  background: #02A650;
+  color: #FFFFFF;
+}
+
+
+/* colors for players */
+
+div.btn.player-0 {
+  background: #614B3D;
+  color: #FFFFFF;
+}
+
+div.btn.player-1 {
+  background: #F5F7F6;
+  color: #000000;
+}
+
+div.btn.player-2 {
+  background: #E66CA9;
+  color: #000000;
+}
+
+div.btn.player-3 {
+  background: #00ABC7;
+  color: #000000;
+}

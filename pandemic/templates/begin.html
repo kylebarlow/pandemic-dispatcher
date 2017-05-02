@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Game Setup{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <div class="container-fluid">
+        {{ wtf.quick_form(form) }}
+    </div>
+{% endblock %}
