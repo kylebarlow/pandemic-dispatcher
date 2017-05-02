@@ -5,7 +5,8 @@ setup(
     packages=['pandemic'],
     include_package_data=True,
     install_requires=[
-        'flask',
+        'flask>=0.12.1',
+        'flask-nav',
         'sqlalchemy',
         'Flask-SQLAlchemy',
         'Flask-Bootstrap',
