@@ -71,7 +71,7 @@ class BeginForm(FlaskForm):
     submit = SubmitField(u'Submit')
 
     def __init__(self, *args, **kwargs):
-        super(GameForm, self).__init__(*args, **kwargs)
+        super(BeginForm, self).__init__(*args, **kwargs)
         self.cities.choices = [(city, city) for city in c.CITIES]
         self.cards.choices = [(city, city) for city in c.CITIES if c.CITIES[city] == c.CODA_COLOR]
 
