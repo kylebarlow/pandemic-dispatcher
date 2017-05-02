@@ -11,6 +11,7 @@ setup(
         'Flask-Bootstrap',
         'flask-wtf',
         'Flask-Script',
+        'Flask-nav',
         'wtforms'
     ],
 )
