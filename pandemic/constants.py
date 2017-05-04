@@ -26,19 +26,10 @@ CITIES = OrderedDict([
 MONTHS = [u'January', u'February', u'March', u'April', u'May', u'June',
           u'July', u'August', u'September', u'October', u'November', u'December']
 
-CODA_COLOR = u'yellow'
+INFECTION_RATES = [2, 2, 2, 3, 3, 4, 4, 9] # infection rates per epidemic
+                                           # note: -1 is game setup, infect 9 cities
 
-# number of epidemics in the deck
-EPIDEMICS = 5
-
-# number of cities to infect during setup
-INFECTION_SETUP = 9
-
-# infection rates per epidemic
-INFECTION_RATES = [2, 2, 2, 3, 3, 4, 4]
-
-# four players, of course
-PLAYERS = 4
-
-# draw two cards at a time
-DRAW = 2
+EPIDEMICS = 5 # number of epidemics in the deck
+PLAYERS = 4 # four players, of course
+DRAW = 2 # draw two cards at a time
+CODA_COLOR = u'yellow' # color of the COdA virus

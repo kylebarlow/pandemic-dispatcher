@@ -14,12 +14,13 @@ db = SQLAlchemy()
 nav = Nav()
 
 @nav.navigation()
-def mynavbar():
-    return Navbar('pandemic',
+def navbar():
+    return Navbar('Pandemic!',
                   View('Begin', 'main.begin'),
                   View('Draw', 'main.draw'),
                   View('Infect', 'main.infect'),
                   View('History', 'main.history'))
+
 
 def create_app(config_name):
     app = Flask(__name__)
@@ -35,10 +36,17 @@ def create_app(config_name):
 
     return app
 
+
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 
+
 def init_db():
+    import models
     db.create_all()
+    db.session.add_all([models.City(name=city_name, color=city_color)
+                        for city_name,city_color in constants.CITIES.items()])
+    db.session.commit()
+
 
 @app.cli.command('initdb')
 def initdb_command():
