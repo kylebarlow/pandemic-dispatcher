@@ -68,12 +68,12 @@ class BeginForm(FlaskForm):
 
 
 class DrawForm(FlaskForm):
-    epidemic = SelectField(u'Epidemic', description=u'The city affected by the epidemic')
+    epidemic = SelectField(u'Epidemic', description=u'If an epidemic was drawn, select the city affected')
     vaccine = SelectMultipleField(u'Experimental Vaccine', widget=authorize_vaccine,
                                   choices=[(u'Yes', u'Yes')] * c.PLAYERS,
                                   description=u'Authorization required for experimental vaccine')
-    cards = SelectMultipleField(u'Player Cards', widget=select_cities,
-                                description=u'COdA-403b cards drawn')
+    cards = SelectMultipleField(u'COdA-403b Player Cards', widget=select_cities,
+                                description=u'{} city cards drawn'.format(c.CODA_COLOR.upper()))
     submit = SubmitField(u'Submit')
     game = HiddenField(u'game_id', validators=[InputRequired()])
 
@@ -84,7 +84,7 @@ class DrawForm(FlaskForm):
 
         self.turn_num = game_state['turn_num']
         if self.turn_num == -1:
-            self.cards.description = u'COdA-403b cards in initial hands'
+            self.cards.description = u'{} city cards in initial hands'.format(c.CODA_COLOR.upper())
 
         if game_state['epidemics'] == c.EPIDEMICS or self.turn_num == -1:
             del self.epidemic
@@ -109,6 +109,10 @@ class DrawForm(FlaskForm):
         if 0 < len(field.data) < c.PLAYERS:
             field.data = []
             raise ValidationError(u"All players must authorize an experimental vaccine")
+
+        if len(field.data) == c.PLAYERS and self.epidemic.data:
+            field.data = []
+            raise ValidationError(u"Using an experimental vaccine negates an epidemic")
 
 
 class InfectForm(FlaskForm):
