@@ -128,7 +128,7 @@ def draw(game_id=None):
     if form.validate_on_submit():
         if game.turn_num > -1:
             turn.x_vaccine = len(form.vaccine.data) == c.PLAYERS
-            turn.epidemic = form.epidemic.data and not x_vaccine_used
+            turn.epidemic = form.epidemic.data and not turn.x_vaccine
 
         if form.cards.data:
             turn.draws = City.query.filter(City.name.in_(form.cards.data)).all()
