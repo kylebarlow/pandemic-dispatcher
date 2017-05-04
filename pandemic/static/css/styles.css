@@ -58,6 +58,10 @@ div.game-state {
   text-align: right;
 }
 
+div.game-state > div.gs-header {
+  text-align: center;
+}
+
 div.game-state > div.row {
   margin: 2px;
 }
