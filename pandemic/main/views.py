@@ -37,9 +37,9 @@ def get_game_state(game):
             assert stack[city.name] == 1
             stack[city.name] = 0
 
-    deck_size = (len(c.CITIES) + epidemics + game.funding_rate + game.extra_cards
-                 - (len(turns) + (c.PLAYERS - 1)) * c.DRAW)
-
+    deck_size = (len(c.CITIES) + (c.EPIDEMICS - epidemics)
+                 + game.funding_rate + game.extra_cards
+                 - (len(turns) + c.PLAYERS - 1) * c.DRAW)
 
     infection_rate = c.INFECTION_RATES[epidemics]
 
@@ -111,9 +111,15 @@ def draw(game_id=None):
         return redirect(url_for('.begin'))
 
     turn = Turn.query.filter_by(game_id=game.id, turn_num=game.turn_num).one_or_none()
-    if turn is not None:
+    if turn is None:
+        turn = Turn(game_id=game.id, turn_num=game.turn_num,
+                    epidemic=False, x_vaccine=False)
+        db.session.add(turn)
+    else:
         turn.infections = [] # this could break the game state otherwise
-        db.session.commit()
+        turn.draws = []
+
+    db.session.commit()
 
     game_state = get_game_state(game)
 
@@ -121,20 +127,8 @@ def draw(game_id=None):
 
     if form.validate_on_submit():
         if game.turn_num > -1:
-            x_vaccine_used = len(form.vaccine.data) == c.PLAYERS
-            epidemic_drawn = form.epidemic.data and not x_vaccine_used
-        else:
-            x_vaccine_used = False
-            epidemic_drawn = False
-
-        if turn is None:
-            turn = Turn(game_id=game.id, turn_num=game.turn_num,
-                        epidemic=epidemic_drawn, x_vaccine=x_vaccine_used)
-            db.session.add(turn)
-        else:
-            turn.epidemic = epidemic_drawn
-            turn.x_vaccine = x_vaccine_used
-            turn.draws = []
+            turn.x_vaccine = len(form.vaccine.data) == c.PLAYERS
+            turn.epidemic = form.epidemic.data and not x_vaccine_used
 
         if form.cards.data:
             turn.draws = City.query.filter(City.name.in_(form.cards.data)).all()
@@ -162,20 +156,20 @@ def infect(game_id=None):
         session['game_id'] = None
         return redirect(url_for('.begin'))
 
+    this_turn = Turn.query.filter_by(game_id=game.id, turn_num=game.turn_num).one_or_none()
+    if this_turn is None:
+        flash(u'Not on the infection step right now', 'error')
+        return redirect(url_for('.draw'))
+
     game_state = get_game_state(game)
 
     form = InfectForm(game_id, game_state)
 
     if form.validate_on_submit():
-        this_turn = Turn.query.filter_by(game_id=game.id, turn_num=game.turn_num).one_or_none()
-        if this_turn is None:
-            flash(u'Not on the infection step right now', 'error')
-            return redirect(url_for('.draw'))
-
-        this_turn.infections = City.query.filter(City.name.in_(form.cities.data)).all()
+        if form.cities.data:
+            this_turn.infections = City.query.filter(City.name.in_(form.cities.data)).all()
 
         game.turn_num += 1
-
         db.session.commit()
 
         return redirect(url_for('.draw'))
