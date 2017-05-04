@@ -37,6 +37,9 @@ def get_game_state(game):
             assert stack[city.name] == 1
             stack[city.name] = 0
 
+        if not any(stack[city_name] == 1 for city_name in stack):
+            stack = {city_name:(s - (s > 0)) for city_name,s in stack.items()}
+
     deck_size = (len(c.CITIES) + (c.EPIDEMICS - epidemics)
                  + game.funding_rate + game.extra_cards
                  - (len(turns) + c.PLAYERS - 1) * c.DRAW)
