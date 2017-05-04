@@ -2,7 +2,7 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "bootstrap/utils.html" as util %}
 
-{% import "game.html" as game %}
+{% import "macros/game.html" as game_macros %}
 
 {% block title %}Pandemic Legacy 0.1{% endblock %}
 {% block head %}
@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block navbar %}
-{{nav.mynavbar.render()}}
+{{nav.navbar.render()}}
 {% endblock %}
 
 {% block content %}
