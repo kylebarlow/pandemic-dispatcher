@@ -92,24 +92,60 @@ div.month {
 }
 
 
+
+/* player drag-n-drop stuff */
+
+.border {
+  border: 1px solid #ccc
+}
+
+ol.js-player-grid {
+  border: 0px;
+  box-shadow: none;
+}
+
+ol.js-player-grid > li {
+  margin-bottom: 4px;
+  display: list-item;
+}
+
+ol.js-player-grid > li:before {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+ol.js-player-grid > li > div {
+  display: inline-block;
+}
+
+
 /* colors for players */
 
-div.btn.player-0 {
+.players-0 {
   background: #614B3D;
   color: #FFFFFF;
+  min-height: 40px;
+  border: 1px solid #ccc
 }
 
-div.btn.player-1 {
-  background: #F5F7F6;
+.players-1 {
+  background: #F0F0F0;
   color: #000000;
+  min-height: 40px;
+  border: 1px solid #ccc
 }
 
-div.btn.player-2 {
+.players-2 {
   background: #E66CA9;
   color: #000000;
+  min-height: 40px;
+  border: 1px solid #ccc
 }
 
-div.btn.player-3 {
+.players-3 {
   background: #00ABC7;
   color: #000000;
+  min-height: 40px;
+  border: 1px solid #ccc
 }
+

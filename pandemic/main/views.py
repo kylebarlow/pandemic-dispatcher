@@ -8,7 +8,7 @@ from flask import g, session, render_template, redirect, url_for, flash
 from . import main
 from .. import db
 from .. import constants as c
-from ..models import Game, City, Turn
+from ..models import Game, City, Turn, PlayerSession, Character
 
 from .forms import BeginForm, DrawForm, InfectForm, ReplayForm
 
@@ -42,7 +42,7 @@ def get_game_state(game):
 
     deck_size = (len(c.CITIES) + (c.EPIDEMICS - epidemics)
                  + game.funding_rate + game.extra_cards
-                 - (len(turns) + c.PLAYERS - 1) * c.DRAW)
+                 - (len(turns) + c.NUM_PLAYERS - 1) * c.DRAW)
 
     infection_rate = c.INFECTION_RATES[epidemics]
 
@@ -90,6 +90,14 @@ def begin():
         db.session.add(game)
         db.session.commit()
 
+        for player_data in form.players.data:
+            player_char = Character.query.filter_by(name=player_data['character']).one()
+            player = PlayerSession(player_name=player_data['player_name'],
+                                   turn_num=int(player_data['turn_num']),
+                                   color_index=int(player_data['color_index']),
+                                   game_id=game.id, char_id=player_char.id)
+            db.session.add(player)
+
         session['game_id'] = game.id
 
         return redirect(url_for('.draw'))
@@ -106,7 +114,7 @@ def draw(game_id=None):
     elif game_id:
         session['game_id'] = game_id
 
-    game_id = int(session['game_id'])
+    game_id = session['game_id']
     game = Game.query.filter_by(id=game_id).one_or_none()
     if game is None:
         flash(u'No game with that ID', 'error')
@@ -130,7 +138,7 @@ def draw(game_id=None):
 
     if form.validate_on_submit():
         if game.turn_num > -1:
-            turn.x_vaccine = len(form.vaccine.data) == c.PLAYERS
+            turn.x_vaccine = len(form.vaccine.data) == c.NUM_PLAYERS
             turn.epidemic = form.epidemic.data and not turn.x_vaccine
 
         if form.cards.data:
@@ -152,7 +160,7 @@ def infect(game_id=None):
     elif game_id:
         session['game_id'] = game_id
 
-    game_id = int(session['game_id'])
+    game_id = session['game_id']
     game = Game.query.filter_by(id=game_id).first()
     if game is None:
         flash(u'No game with that ID', 'error')
@@ -169,6 +177,10 @@ def infect(game_id=None):
     form = InfectForm(game_id, game_state)
 
     if form.validate_on_submit():
+        if form.game != game_id:
+            flash(u'Something went wrong', 'error')
+            return redirect(url_for('.begin'))
+
         if form.cities.data:
             this_turn.infections = City.query.filter(City.name.in_(form.cities.data)).all()
 
@@ -204,10 +216,11 @@ def replay(game_id, turn_num):
         flash(u'No game with that ID', 'error')
         return redirect(url_for('.begin'))
 
-    form = ReplayForm(game_id)
+    form = ReplayForm(game_id, [ch.character.name for ch in game.characters],
+                      [ch.color_index for ch in game.characters])
 
     if form.validate_on_submit():
-        if len(form.authorize.data) == c.PLAYERS:
+        if len(form.authorize.data) == c.NUM_PLAYERS:
             session['game_id'] = game_id
             game.turn_num = turn_num
             db.session.commit()

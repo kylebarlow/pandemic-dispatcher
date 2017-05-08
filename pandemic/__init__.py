@@ -45,6 +45,9 @@ def init_db():
     db.create_all()
     db.session.add_all([models.City(name=city_name, color=city_color)
                         for city_name,city_color in constants.CITIES.items()])
+    db.session.add_all([models.Character(name=name, first_name=first_name,
+                                         middle_name=middle_name, icon=icon)
+                        for name,(first_name,middle_name,icon) in constants.CHARACTERS.items()])
     db.session.commit()
 
 
