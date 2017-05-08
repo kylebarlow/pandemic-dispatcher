@@ -56,7 +56,7 @@ def player_widget(field, **kwargs):
             u'</div><div class="col-xs-2 js-grid-target {}"></div>'.format(field.id)]
 
     if errors['character']:
-        html.append(u'<div class=col-xs-3">  {}</div>'.format(errors['character']))
+        html.append(u'<div class="col-xs-3">{}</div>'.format(errors['character']))
 
     return widgets.HTMLString(u''.join(html))
 
