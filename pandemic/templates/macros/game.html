@@ -52,17 +52,29 @@
 
     <div class="container-fluid">
         <div class="row col-sm-12 h2">Details for Game {{ game.id }}</div>
-        <div class="row col-sm-8 h3">
-            <div class="col-sm-4">Month</div>
-            <div class="col-sm-4">{{ game.month }}</div>
+        <div class="row col-sm-8 h4">
+            <div class="col-sm-5">Month</div>
+            <div class="col-sm-5">{{ game.month }}</div>
         </div>
-        <div class="row col-sm-8 h3">
-            <div class="col-sm-4">Funding Rate</div>
-            <div class="col-sm-4">{{ game.funding_rate }}</div>
+        <div class="row col-sm-8 h4">
+            <div class="col-sm-5">Funding Rate</div>
+            <div class="col-sm-5">{{ game.funding_rate }}</div>
         </div>
-        <div class="row col-sm-8 h3">
-            <div class="col-sm-4">Extra Cards</div>
-            <div class="col-sm-4">{{ game.extra_cards }}</div>
+        <div class="row col-sm-8 h4">
+            <div class="col-sm-5">Extra Cards</div>
+            <div class="col-sm-5">{{ game.extra_cards }}</div>
+        </div>
+        <div class="row col-sm-8">
+          <div class="row col-xs-12 h4">
+            <div class="col-xs-5">Player</div>
+            <div class="col-xs-5">Character</div>
+          </div>
+          {% for char in game.characters %}
+            <div class="row col-xs-12">
+              <div class="col-xs-5">{{ char.player_name }}</div>
+              <div class="col-xs-5">{{ char.character.first_name }} {{ char.character.middle_name }} {{ char.character.name }}</div>
+            </div>
+          {% endfor %}
         </div>
         <div class="row col-sm-12 h2">Turns</div>
             <div class="row col-sm-12 h3">

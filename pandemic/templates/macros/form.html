@@ -1,0 +1,31 @@
+{% import "bootstrap/wtf.html" as wtf %}
+
+
+{# a little macro just so that the player_field displays errors correctly#}
+{% macro begin_form(form) %}
+{%- set _enctype = [] %}
+<form action="" method="post" class="form" role="form">
+  {{ form.hidden_tag() }}
+  {{ wtf.form_errors(form, hiddens='only') }}
+
+  {{ wtf.form_field(form.month) }}
+  <div class="form-group {% if form.players.errors %} has-error{% endif -%}">
+    {{ form.players.label(class="control-label")|safe }}
+    {{ form.players(class="form-control", **kwargs)|safe }}
+    {%- if form.players.errors %}
+      {% for error in form.players.errors %}
+        {% if not error is mapping %}
+          <p class="help-block">{{error}}</p>
+        {% endif %}
+      {%- endfor %}
+    {%- elif form.players.description -%}
+      <p class="help-block">{{form.players.description|safe}}</p>
+    {%- endif %}
+  </div>
+  {{ wtf.form_field(form.funding_rate) }}
+  {{ wtf.form_field(form.extra_cards) }}
+  {{ wtf.form_field(form.submit) }}
+
+</form>
+{%- endmacro %}
+
