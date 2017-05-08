@@ -1,100 +1,109 @@
 {% macro game_state(game_state) %}
-    {% if game_state %}
+  {% if game_state %}
     <div class="container game-state">
-        <div class="row col-sm-12">
-            <div class="col-sm-2 h3">Turn: {{ game_state['turn_num'] }}</div>
-            <div class="col-sm-4 h3">Cards Remaining: {{ game_state['deck_size'] }}</div>
-            <div class="col-sm-4 h3">Epidemics: {{ game_state['epidemics'] }}</div>
+      <div class="row col-sm-12">
+        <div class="col-sm-2 h3">Turn: {{ game_state['turn_num'] }}</div>
+        <div class="col-sm-4 h3">Cards Remaining: {{ game_state['deck_size'] }}</div>
+        <div class="col-sm-4 h3">Epidemics: {{ game_state['epidemics'] }}</div>
+      </div>
+      <div class="row col-sm-12 gs-header">
+        <div class="col-sm-3 h3">City</div>
+        <div class="col-sm-2 h3">Stack</div>
+        <div class="col-sm-2 h3">Infection</div>
+        <div class="col-sm-2 h3">Epidemic</div>
+      </div>
+      {%- for city in game_state['city_data'] %}
+        <div class="row col-sm-12{% if city['discard'] %} discard{% endif %}">
+          <div class="col-sm-3 city-{{ city['color'] }}">{{ city['name'] }}</div>
+          <div class="col-sm-2">{{ city['stack'] }}</div>
+          <div class="col-sm-2{% if city['inf_risk'] > 0.25 %} bg-danger{% endif %}">{{ city['inf_risk'] | to_percent }}</div>
+          <div class="col-sm-2">{{ city['epi_risk'] | to_percent }}</div>
         </div>
-        <div class="row col-sm-12 gs-header">
-            <div class="col-sm-3 h3">City</div>
-            <div class="col-sm-2 h3">Stack</div>
-            <div class="col-sm-2 h3">Infection</div>
-            <div class="col-sm-2 h3">Epidemic</div>
-        </div>
-        {%- for city in game_state['city_data'] %}
-            <div class="row col-sm-12{% if city['discard'] %} discard{% endif %}">
-                <div class="col-sm-3 city-{{ city['color'] }}">{{ city['name'] }}</div>
-                <div class="col-sm-2">{{ city['stack'] }}</div>
-                <div class="col-sm-2{% if city['inf_risk'] > 0.25 %} bg-danger{% endif %}">{{ city['inf_risk'] | to_percent }}</div>
-                <div class="col-sm-2">{{ city['epi_risk'] | to_percent }}</div>
-            </div>
-        {%- endfor %}
+      {%- endfor %}
     </div>
-    {% endif %}
+  {% endif %}
 {%- endmacro %}
 
 {% macro game_summaries(games) %}
 
-    <div class="container-fluid">
-        <div class="row col-sm-8 h2">Game Database</div>
-        <div class="row col-sm-8">
-            <div class="col-sm-2 h3">Game</div>
-            <div class="col-sm-3 h3">Month</div>
-            <div class="col-sm-2 h3">R01s</div>
-            <div class="col-sm-3 h3">Turn #</div>
-        </div>
-        {%- for game in games %}
-            <div class="row col-sm-8">
-                <div class="col-sm-2"><a href="/history/{{ game.id }}">{{ game.id }}</a></div>
-                <div class="col-sm-3">{{ game.month }}</div>
-                <div class="col-sm-2">{{ game.funding_rate }}</div>
-                <div class="col-sm-3">{{ game.turn_num }}</div>
-            </div>
-        {% else %}
-            <div class="row col-sm-12">There are no games in the database</div>
-        {%- endfor %}
+  <div class="container-fluid">
+    <div class="row col-sm-8 h2">Game Database</div>
+    <div class="row col-sm-8">
+      <div class="col-sm-2 h3">Game</div>
+      <div class="col-sm-3 h3">Month</div>
+      <div class="col-sm-2 h3">R01s</div>
+      <div class="col-sm-3 h3">Turn #</div>
     </div>
+    {%- for game in games %}
+      <div class="row col-sm-8">
+        <div class="col-sm-2"><a href="/history/{{ game.id }}">{{ game.id }}</a></div>
+        <div class="col-sm-3">{{ game.month }}</div>
+        <div class="col-sm-2">{{ game.funding_rate }}</div>
+        <div class="col-sm-3">{{ game.turn_num }}</div>
+      </div>
+    {% else %}
+      <div class="row col-sm-12">There are no games in the database</div>
+    {%- endfor %}
+  </div>
 
 {%- endmacro %}
 
 {% macro game_history(game) %}
 
-    <div class="container-fluid">
-        <div class="row col-sm-12 h2">Details for Game {{ game.id }}</div>
-        <div class="row col-sm-8 h4">
-            <div class="col-sm-5">Month</div>
-            <div class="col-sm-5">{{ game.month }}</div>
-        </div>
-        <div class="row col-sm-8 h4">
-            <div class="col-sm-5">Funding Rate</div>
-            <div class="col-sm-5">{{ game.funding_rate }}</div>
-        </div>
-        <div class="row col-sm-8 h4">
-            <div class="col-sm-5">Extra Cards</div>
-            <div class="col-sm-5">{{ game.extra_cards }}</div>
-        </div>
-        <div class="row col-sm-8">
-          <div class="row col-xs-12 h4">
-            <div class="col-xs-5">Player</div>
-            <div class="col-xs-5">Character</div>
-          </div>
-          {% for char in game.characters %}
-            <div class="row col-xs-12">
-              <div class="col-xs-5">{{ char.player_name }}</div>
-              <div class="col-xs-5">{{ char.character.first_name }} {{ char.character.middle_name }} {{ char.character.name }}</div>
-            </div>
-          {% endfor %}
-        </div>
-        <div class="row col-sm-12 h2">Turns</div>
-            <div class="row col-sm-12 h3">
-                <div class="row col-sm-1">#</div>
-                <div class="row col-sm-4">Cities Infected</div>
-                <div class="row col-sm-3">COdA-403b Drawn</div>
-                <div class="row col-sm-2">Epidemic?</div>
-                <div class="row col-sm-2">Vaccine?</div>
-            </div>
-        {%- for turn in game.turns %}
-            <div class="row col-sm-12 h4">
-                <div class="row col-sm-1"><a href={{ url_for('main.replay', game_id=game.id, turn_num=turn.turn_num) }}><span class="glyphicon glyphicon-backward" aria-hidden="true"></span> {{ turn.turn_num }}</a></div>
-                <div class="row col-sm-4">{% if turn.infections %}{{ turn.infections|join(', ') }}{% else %}No cities{% endif %}</div>
-                <div class="row col-sm-3">{% if turn.draws %}{{ turn.draws|join(', ') }}{% else %}No cities drawn{% endif %}</div>
-                <div class="row col-sm-2">{% if turn.epidemic %}<span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span>{% endif %}</div>
-                <div class="row col-sm-2">{% if turn.x_vaccine %}<span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>{% endif %}</div>
-            </div>
-        {% else %}
-            <div class="row col-sm-12">No turns have been played yet</div>
-        {%- endfor %}
+  <div class="container-fluid">
+    <div class="row col-sm-12 h2">Details for Game {{ game.id }}</div>
+    <div class="row col-sm-8 h4">
+      <div class="col-sm-5">Month</div>
+      <div class="col-sm-5">{{ game.month }}</div>
     </div>
+    <div class="row col-sm-8 h4">
+      <div class="col-sm-5">Funding Rate</div>
+      <div class="col-sm-5">{{ game.funding_rate }}</div>
+    </div>
+    <div class="row col-sm-8 h4">
+      <div class="col-sm-5">Extra Cards</div>
+      <div class="col-sm-5">{{ game.extra_cards }}</div>
+    </div>
+    <div class="row col-sm-12 h2">Characters</div>
+    <div class="row col-sm-8">
+    {% if game.characters %}
+      <div class="row col-sm-12 h4">
+        <div class="col-sm-3">Player</div>
+        <div class="col-sm-3">First Name</div>
+        <div class="col-sm-3">Middle Name</div>
+        <div class="col-sm-3">Character Name</div>
+      </div>
+      {% for char in game.characters %}
+        <div class="row col-sm-12">
+          <div class="col-sm-3">{{ char.player_name }}</div>
+          <div class="col-sm-3">{{ char.character.first_name or '-'}}</div>
+          <div class="col-sm-3">{{ char.character.middle_name or '-'}}</div>
+          <div class="col-sm-3">{{ char.character.name }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="row col-sm-12">No characters have been selected</div>
+    {% endif %}
+    </div>
+    <div class="row col-sm-12 h2">Turns</div>
+    <div class="row col-sm-12 h3">
+      <div class="row col-sm-1">#</div>
+      <div class="row col-sm-4">Cities Infected</div>
+      <div class="row col-sm-3">COdA-403b Drawn</div>
+      <div class="row col-sm-2">Epidemic?</div>
+      <div class="row col-sm-2">Vaccine?</div>
+    </div>
+    {%- for turn in game.turns %}
+      <div class="row col-sm-12 h4">
+        <div class="row col-sm-1"><a href={{ url_for('main.replay', game_id=game.id, turn_num=turn.turn_num) }}><span class="glyphicon glyphicon-backward" aria-hidden="true"></span> {{ turn.turn_num }}</a></div>
+        <div class="row col-sm-4">{% if turn.infections %}{{ turn.infections|join(', ') }}{% else %}No cities{% endif %}</div>
+        <div class="row col-sm-3">{% if turn.draws %}{{ turn.draws|join(', ') }}{% else %}No cities drawn{% endif %}</div>
+        <div class="row col-sm-2">{% if turn.epidemic %}<span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span>{% endif %}</div>
+        <div class="row col-sm-2">{% if turn.x_vaccine %}<span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>{% endif %}</div>
+      </div>
+    {% else %}
+      <div class="row col-sm-12">No turns have been played yet</div>
+    {%- endfor %}
+  </div>
 
 {%- endmacro %}

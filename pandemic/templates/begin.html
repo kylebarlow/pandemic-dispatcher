@@ -18,18 +18,20 @@
   sortable('.js-grid', {
     forcePlaceholderSize: true,
     placeholderClass: 'btn col-xs-3 border',
-    connectWith: 'js-connected'
+    connectWith: 'js-connected',
+    items: ':not(.border)'
   });
   sortable('.js-grid-target', {
     forcePlaceholderSize: true,
     placeholderClass: 'btn col-xs-12 border',
     connectWith: 'js-connected',
-    maxSize: 1
+    items: ':not(.border)',
+    maxItems: 1
   });
 
   sortable('.js-player-grid', {
     forcePlaceholderSize: true,
-    placeholderClass: 'li border',
+    placeholderClass: 'li border'
   });
 
 

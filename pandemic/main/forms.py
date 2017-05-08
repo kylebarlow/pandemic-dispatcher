@@ -43,7 +43,7 @@ class BeginForm(FlaskForm):
 
     def validate_players(self, field):
         if len(field.data) == c.NUM_PLAYERS and all(ch['character'] != u'Dispatcher' for ch in field.data):
-            raise ValidationError(u"Are you sure you're not going to use the Dispatcher?")
+            raise ValidationError(u"Error: the Dispatcher is not optional")
 
 
 class DrawForm(FlaskForm):

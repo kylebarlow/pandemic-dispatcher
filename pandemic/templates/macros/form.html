@@ -15,7 +15,7 @@
     {%- if form.players.errors %}
       {% for error in form.players.errors %}
         {% if not error is mapping %}
-          <p class="help-block">{{error}}</p>
+          <p class="help-block h3">{{error}}</p>
         {% endif %}
       {%- endfor %}
     {%- elif form.players.description -%}
