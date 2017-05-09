@@ -134,7 +134,8 @@ def draw(game_id=None):
 
     game_state = get_game_state(game)
 
-    form = DrawForm(game_id, game_state)
+    form = DrawForm(game_state, [ch.character.name for ch in game.characters],
+                    [ch.color_index for ch in game.characters])
 
     if form.validate_on_submit():
         if game.turn_num > -1:
@@ -174,11 +175,11 @@ def infect(game_id=None):
 
     game_state = get_game_state(game)
 
-    form = InfectForm(game_id, game_state)
+    form = InfectForm(game_state)
 
     if form.validate_on_submit():
-        if form.game != game_id:
-            flash(u'Something went wrong', 'error')
+        if form.game.data != game_id:
+            flash(u'Game ID did not match session', 'error')
             return redirect(url_for('.begin'))
 
         if form.cities.data:

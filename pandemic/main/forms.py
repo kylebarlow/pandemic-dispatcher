@@ -18,23 +18,11 @@ class PlayerField(Form):
     color_index = HiddenField(u'oolor', validators=[InputRequired()])
 
 
-
-
-class PlayerFieldList(FieldList):
-    def post_validate(self, form, validation_stopped):
-        print 'hi'
-        if validation_stopped:
-            for subfield in field:
-                subfield.character.data = u''
-
-
 class BeginForm(FlaskForm):
     month = SelectField(u'Current Month', choices=zip(c.MONTHS, c.MONTHS), validators=[InputRequired()],
                        widget=wdg.select_month, description=u'The month for this game')
-    players = PlayerFieldList(FormField(PlayerField, widget=wdg.player_widget, label=u'Player name'), label=u'',
-                              widget=wdg.PlayerListWidget(), min_entries=c.NUM_PLAYERS, max_entries=c.NUM_PLAYERS)
-    # players.post_validate = player_post_validate
-
+    players = FieldList(FormField(PlayerField, widget=wdg.player_widget, label=u'Player name'), label=u'',
+                        widget=wdg.PlayerListWidget(), min_entries=c.NUM_PLAYERS, max_entries=c.NUM_PLAYERS)
     funding_rate = IntegerField(u'Funding Rate', default=0, validators=[InputRequired(), NumberRange(0, 10)],
                                     description=u'How many R01s we have')
     extra_cards = IntegerField(u'Bonus Cards', default=0, validators=[InputRequired(), NumberRange(0)],
@@ -49,17 +37,16 @@ class BeginForm(FlaskForm):
 class DrawForm(FlaskForm):
     epidemic = SelectField(u'Epidemic', description=u'If an epidemic was drawn, select the city affected')
     vaccine = SelectMultipleField(u'Experimental Vaccine', widget=wdg.authorize_vaccine,
-                                      choices=[(u'Yes', u'Yes')] * c.NUM_PLAYERS,
-                                      description=u'Authorization required for experimental vaccine')
+                                  description=u'Authorization required for experimental vaccine')
     cards = SelectMultipleField(u'COdA-403b Player Cards', widget=wdg.select_cities,
                                     description=u'{} city cards drawn'.format(c.CODA_COLOR.capitalize()))
     submit = SubmitField(u'Submit')
     game = HiddenField(u'game_id', validators=[InputRequired()])
 
-    def __init__(self, game_id, game_state, *args, **kwargs):
+    def __init__(self, game_state, characters, colors, *args, **kwargs):
         super(DrawForm, self).__init__(*args, **kwargs)
 
-        self.game.data = game_id
+        self.game.data = game_state['game_id']
 
         self.turn_num = game_state['turn_num']
         if self.turn_num == -1:
@@ -73,6 +60,7 @@ class DrawForm(FlaskForm):
             epidemic_cities = [(city['name'], city['name']) for city in game_state['city_data']
                                if city['stack'] == max_stack]
             self.epidemic.choices = [(u'', u'')] + epidemic_cities
+            self.vaccine.choices = [(ch,(u'Yes', ci)) for ch,ci in zip(characters, colors)]
 
         cards = [(city['name'], city['name']) for city in game_state['city_data']
                  if city['color'] == c.CODA_COLOR and not city['drawn']]
@@ -100,10 +88,10 @@ class InfectForm(FlaskForm):
     submit = SubmitField(u'Submit')
     game = HiddenField(u'game_id', validators=[InputRequired()])
 
-    def __init__(self, game_id, game_state, *args, **kwargs):
+    def __init__(self, game_state, *args, **kwargs):
         super(InfectForm, self).__init__(*args, **kwargs)
 
-        self.game.data = game_id
+        self.game.data = game_state['game_id']
 
         if game_state['turn_num'] == -1:
             self.epidemics = -1

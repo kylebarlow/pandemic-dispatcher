@@ -77,6 +77,10 @@ div.game-state div.row.discard {
   height: auto;
 }
 
+.form-group label {
+  display: block;
+}
+
 div.btn {
   margin: 2px;
   border-radius: 3px !important;

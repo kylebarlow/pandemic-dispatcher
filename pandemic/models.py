@@ -27,8 +27,8 @@ class Game(db.Model):
     turns = db.relationship('Turn', backref='game', lazy='subquery')
 
     def __repr__(self):
-        return u'<Game {}, Month {}, FR {}, Deck {}, Epidemics {}>'.format(self.id, self.month, self.funding_rate,
-                                                                           self.deck_size, self.epidemics)
+        return u'<Game {}, Month {}, Turn {}, FR {}>'.format(
+                self.id, self.month, self.turn_num, self.funding_rate)
 
 
 class Character(db.Model):
