@@ -46,5 +46,6 @@ INFECTION_RATES = [2, 2, 2, 3, 3, 4, 4, 9] # infection rates per epidemic
 
 EPIDEMICS = 5 # number of epidemics in the deck
 NUM_PLAYERS = 4 # four players, of course
+INITIAL_HAND_SIZE = {2: 4, 3: 3, 4: 2} # number of hands in initial hands, according to NUM_PLAYERS
 DRAW = 2 # draw two cards at a time
 CODA_COLOR = u'yellow' # color of the COdA virus

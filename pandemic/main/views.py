@@ -1,7 +1,7 @@
 import os
 import cStringIO
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from flask import g, session, render_template, redirect, url_for, flash
 
@@ -18,31 +18,82 @@ def to_percent(v):
     return u'{:.1f}%'.format(v * 100.0) if v > 0 else u'-'
 
 
-def get_game_state(game):
+@main.app_template_filter('danger_level')
+def to_percent(v):
+    if v > 0.66:
+        return u'bg-danger'
+    elif v > 0.33:
+        return u'bg-warning'
+    else:
+        return u''
+
+
+def get_game_state(game, draw_phase=True):
     turns = (Turn.query.filter_by(game_id=game.id)
              .filter(Turn.turn_num <= game.turn_num)
              .order_by(Turn.turn_num).all())
+
+    # deck size after dealing the initial hands
+    post_setup_deck_size = (len(c.CITIES) + c.EPIDEMICS
+                            + game.funding_rate + game.extra_cards
+                            - c.NUM_PLAYERS * c.INITIAL_HAND_SIZE[c.NUM_PLAYERS])
+    # number of post-setup cards drawn so far
+    if game.turn_num == -1:
+        ps_cards_drawn = 0
+    else:
+        ps_cards_drawn = (len(turns) - 1 - draw_phase) * c.DRAW
+    # how many cards are left
+    deck_size = post_setup_deck_size - ps_cards_drawn
+
     stack = {city_name:1 for city_name in c.CITIES}
 
-    drawn_cards = set()
+    drawn_cards = set() # only for COdA cards
     epidemics = 0
+    vaccines = 0
     for turn in turns:
         drawn_cards.update(city.name for city in turn.draws)
 
         if turn.epidemic:
             epidemics += 1
             stack = {city_name:(stack[city_name] + 1) for city_name in stack}
+        elif turn.x_vaccine:
+            vaccines += 1
 
-        for city in turn.infections:
-            assert stack[city.name] == 1
+        for city in sorted(turn.infections, key=lambda city: stack[city.name]):
+            assert stack[city.name] == 1 # if a city is infected too early
             stack[city.name] = 0
 
-        if not any(stack[city_name] == 1 for city_name in stack):
-            stack = {city_name:(s - (s > 0)) for city_name,s in stack.items()}
+            if not any(stack[city_name] == 1 for city_name in stack):
+                stack = {city_name:(s - (s > 0)) for city_name,s in stack.items()}
 
-    deck_size = (len(c.CITIES) + (c.EPIDEMICS - epidemics)
-                 + game.funding_rate + game.extra_cards
-                 - (len(turns) + c.NUM_PLAYERS - 1) * c.DRAW)
+    epi_cards_seen = epidemics + vaccines
+
+    epidemic_stacks = Counter((i % c.EPIDEMICS) for i in range(post_setup_deck_size))
+    epidemic_blocks = list(epidemic_stacks.elements())
+
+    i_block = epidemic_blocks[ps_cards_drawn]
+    j_block = epidemic_blocks[ps_cards_drawn + 1]
+
+    for i in epidemic_blocks[:ps_cards_drawn]:
+        epidemic_stacks[i] -= 1
+
+    if game.turn_num > -1:
+        if i_block < epi_cards_seen:
+            if j_block < epi_cards_seen:
+                # this epidemic has already been drawn
+                epidemic_risk = 0.0
+            else:
+                # the second card could be one
+                epidemic_risk = 1.0 / epidemic_stacks[j_block]
+        elif i_block == j_block:
+            # both are same block, and it hasn't been drawn yet
+            epidemic_risk = 2.0 / epidemic_stacks[i_block]
+        else:
+            # first card is definitely an epidemic, second one might be!
+            assert epidemic_stacks[i_block] == 1
+            epidemic_risk = 1.0 + 1.0 / epidemic_stacks[j_block]
+    else:
+        epidemic_risk = 0.0
 
     infection_rate = c.INFECTION_RATES[epidemics]
 
@@ -73,7 +124,7 @@ def get_game_state(game):
                  for city_name,city_color in c.CITIES.items()]
 
     return {'game_id': game.id, 'turn_num': game.turn_num,
-            'turns': turns, 'deck_size': deck_size,
+            'turns': turns, 'deck_size': deck_size, 'epi_risk': epidemic_risk,
             'epidemics': epidemics, 'city_data': city_data}
 
 
@@ -173,7 +224,7 @@ def infect(game_id=None):
         flash(u'Not on the infection step right now', 'error')
         return redirect(url_for('.draw'))
 
-    game_state = get_game_state(game)
+    game_state = get_game_state(game, False)
 
     form = InfectForm(game_state)
 

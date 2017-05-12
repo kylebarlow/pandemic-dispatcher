@@ -2,9 +2,18 @@
   {% if game_state %}
     <div class="container game-state">
       <div class="row col-sm-12">
-        <div class="col-sm-2 h3">Turn: {{ game_state['turn_num'] }}</div>
-        <div class="col-sm-4 h3">Cards Remaining: {{ game_state['deck_size'] }}</div>
-        <div class="col-sm-4 h3">Epidemics: {{ game_state['epidemics'] }}</div>
+        <div class="col-sm-5 h3">Turn: {{ game_state['turn_num'] }}</div>
+        <div class="col-sm-5 h3">Cards Remaining: {{ game_state['deck_size'] }}</div>
+      </div>
+      <div class="row col-sm-12">
+        <div class="col-sm-5 h3">Epidemics: {{ game_state['epidemics'] }}</div>
+        <div class="col-sm-5 h3 {{ game_state['epi_risk'] | danger_level }}">
+          {%  if game_state['epi_risk'] > 1.0 %}
+            Epidemic Risk: 100 + {{ (game_state['epi_risk'] - 1) | to_percent }}
+          {% else %}
+            Epidemic Risk: {{ game_state['epi_risk'] | to_percent }}
+          {% endif %}
+        </div>
       </div>
       <div class="row col-sm-12 gs-header">
         <div class="col-sm-3 h3">City</div>
@@ -16,7 +25,7 @@
         <div class="row col-sm-12{% if city['discard'] %} discard{% endif %}">
           <div class="col-sm-3 city-{{ city['color'] }}">{{ city['name'] }}</div>
           <div class="col-sm-2">{{ city['stack'] }}</div>
-          <div class="col-sm-2{% if city['inf_risk'] > 0.25 %} bg-danger{% endif %}">{{ city['inf_risk'] | to_percent }}</div>
+          <div class="col-sm-2 {{ city['inf_risk'] | danger_level }}">{{ city['inf_risk'] | to_percent }}</div>
           <div class="col-sm-2">{{ city['epi_risk'] | to_percent }}</div>
         </div>
       {%- endfor %}
