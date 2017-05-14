@@ -55,8 +55,14 @@ def get_game_state(game, draw_phase=True):
 
         if turn.epidemic:
             epidemics += 1
+            stack[turn.epidemic[0].name] = 0
             stack = {city_name:(stack[city_name] + 1) for city_name in stack}
-        elif turn.x_vaccine:
+            if len(turn.epidemic) == 2:
+                epidemics += 1
+                stack[turn.epidemic[1].name] = 0
+                stack = {city_name: (stack[city_name] + 1) for city_name in stack}
+
+        if turn.x_vaccine:
             vaccines += 1
 
         for city in sorted(turn.infections, key=lambda city: stack[city.name]):
@@ -174,8 +180,7 @@ def draw(game_id=None):
 
     turn = Turn.query.filter_by(game_id=game.id, turn_num=game.turn_num).one_or_none()
     if turn is None:
-        turn = Turn(game_id=game.id, turn_num=game.turn_num,
-                    epidemic=False, x_vaccine=False)
+        turn = Turn(game_id=game.id, turn_num=game.turn_num, x_vaccine=False)
         db.session.add(turn)
     else:
         turn.infections = [] # this could break the game state otherwise
@@ -185,13 +190,15 @@ def draw(game_id=None):
 
     game_state = get_game_state(game)
 
-    form = DrawForm(game_state, [ch.character.name for ch in game.characters],
-                    [ch.color_index for ch in game.characters])
+    form = DrawForm(game_state, game.characters)
 
     if form.validate_on_submit():
         if game.turn_num > -1:
             turn.x_vaccine = len(form.vaccine.data) == c.NUM_PLAYERS
-            turn.epidemic = form.epidemic.data and not turn.x_vaccine
+            if form.epidemic.data:
+                turn.epidemic = [City.query.filter_by(name=form.epidemic.data).first()]
+                if 'second_epidemic' in form and form.second_epidemic.data:
+                    turn.epidemic.append(City.query.filter_by(name=form.second_epidemic.data).first())
 
         if form.cards.data:
             turn.draws = City.query.filter(City.name.in_(form.cards.data)).all()
@@ -268,8 +275,7 @@ def replay(game_id, turn_num):
         flash(u'No game with that ID', 'error')
         return redirect(url_for('.begin'))
 
-    form = ReplayForm(game_id, [ch.character.name for ch in game.characters],
-                      [ch.color_index for ch in game.characters])
+    form = ReplayForm(game_id, game.characters)
 
     if form.validate_on_submit():
         if len(form.authorize.data) == c.NUM_PLAYERS:

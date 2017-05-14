@@ -54,6 +54,11 @@ draws = db.Table('draws',
     db.Column('turn_id', db.Integer, db.ForeignKey('turns.id'), primary_key=True)
 )
 
+epidemics = db.Table('epidemics',
+    db.Column('city_id', db.Integer, db.ForeignKey('cities.id'), primary_key=True),
+    db.Column('turn_id', db.Integer, db.ForeignKey('turns.id'), primary_key=True)
+)
+
 
 class City(db.Model):
     __tablename__ = 'cities'
@@ -65,6 +70,8 @@ class City(db.Model):
     infections = db.relationship('Turn', secondary=infections, lazy=True, backref='infections')
     # turns when this city was drawn as a player card
     draws = db.relationship('Turn', secondary=draws, lazy=True, backref='draws')
+    # turns when this was city was drawn an epidemic
+    epidemics = db.relationship('Turn', secondary=epidemics, lazy=True, backref='epidemic')
 
     def __repr__(self):
         return self.name
@@ -75,7 +82,6 @@ class Turn(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     turn_num = db.Column(db.Integer)  # which turn this is
     game_id = db.Column(db.Integer, db.ForeignKey('games.id'), nullable=False)
-    epidemic = db.Column(db.Boolean, nullable=False) # was an epidemic drawn?
     x_vaccine = db.Column(db.Boolean, nullable=False) # was an experimental vaccine used?
 
     def __repr__(self):
