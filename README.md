@@ -8,12 +8,15 @@ Pull requests are welcome! Please bear in mind that we haven't finished the game
 
 Also I hope this doesn't violate [zmangames](http://www.zmangames.com)'s copyright, but it feels like fair use to me? You should definitely buy Pandemic Legacy if you haven't already, it's really good. You can tell because I made a thing for it.
 
-## Update: version 0.2
+## What's new in version 0.2
 
 Based on the previous game session (in which the server got into a broken state due to user error and was henceforth useless), I've rewritten the data model. The new app models a Game as a series of Turns, and allows for the possibility of going back to a previous turn to change what happened. One hiccup is that this can make the app think something is broken (i.e. a city was infected when that should be impossible) and the current solution is to wipe out the turns following the edited one&emdash;that's unfortunate because it doesn't allow for minor tweaks in game state.
 
+## What's new in version 0.3
+
+I've added character selection and tracking, so it will remember who played each character in each game. This required a little bit of Python and a whole lot of JavaScript to make the interface work nicely. I've also added epidemic tracking, so you will know how likely it is to draw the next epidemic (assuming you set up the deck in the way described in the rules).
+
 Main TODOs:
- - Write an interface for character selection
  - Deploy to a cloud server rather than running locally (this may require some authentication though)
  - Implement some game mechanics that we aren't using right now but might come up in the future (e.g. certain funded events)
  - Possibly: customize the experience based on the game month
