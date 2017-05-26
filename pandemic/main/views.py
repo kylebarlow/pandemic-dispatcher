@@ -268,7 +268,7 @@ def game_history(game_id):
         flash(u'No game with that ID', 'error')
         return redirect(url_for('.history'))
 
-    return render_template("game_history.html", game=game)
+    return render_template("game_history.html", game=game, game_state=get_game_state(game))
 
 
 @main.route('/replay/<int:game_id>/<turn_num>', methods=('GET', 'POST'))
