@@ -45,7 +45,7 @@
     </div>
     {%- for game in games %}
       <div class="row col-sm-8">
-        <div class="col-sm-2"><a href="/history/{{ game.id }}">{{ game.id }}</a></div>
+        <div class="col-sm-2"><a href="{{ url_for('main.game_history', game_id=game.id) }}">{{ game.id }}</a></div>
         <div class="col-sm-3">{{ game.month }}</div>
         <div class="col-sm-2">{{ game.funding_rate }}</div>
         <div class="col-sm-3">{{ game.turn_num }}</div>
