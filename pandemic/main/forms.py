@@ -30,8 +30,8 @@ class BeginForm(FlaskForm):
     submit = SubmitField(u'Submit')
 
     def validate_players(self, field):
-        if len(field.data) == c.NUM_PLAYERS and all(ch['character'] != u'Dispatcher' for ch in field.data):
-            raise ValidationError(u"Error: the Dispatcher is not optional")
+        if len(field.data) == c.NUM_PLAYERS and any(ch['character'] == u'TRAITOR' for ch in field.data):
+            raise ValidationError(u"Error: The Dispatcher is dead to us now")
 
 
 class DrawForm(FlaskForm):
