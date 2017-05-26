@@ -15,23 +15,53 @@
           {% endif %}
         </div>
       </div>
-      <div class="row col-sm-12 gs-header">
-        <div class="col-sm-3 h3">City</div>
-        <div class="col-sm-2 h3">Stack</div>
-        <div class="col-sm-2 h3">Infection</div>
-        <div class="col-sm-2 h3">Epidemic</div>
-      </div>
-      {%- for city in game_state['city_data'] %}
-        <div class="row col-sm-12{% if city['discard'] %} discard{% endif %}">
-          <div class="col-sm-3 city-{{ city['color'] }}">{{ city['name'] }}</div>
-          <div class="col-sm-2">{{ city['stack'] }}</div>
-          <div class="col-sm-2 {{ city['inf_risk'] | danger_level }}">{{ city['inf_risk'] | to_percent }}</div>
-          <div class="col-sm-2">{{ city['epi_risk'] | to_percent }}</div>
-        </div>
-      {%- endfor %}
+      <table class="table city-table">
+        <thead>
+          <tr class="gs-header">
+            <td></td>
+            <td>City</td>
+            <td>Stack</td>
+            <td>Infection</td>
+            <td>Epidemic</td>
+          </tr>
+        </thead>
+        <tbody>
+        {%- for city in game_state['city_data'] %}
+          <tr class="{% if city['discard'] %} discard{% endif %}">
+            <td>{{ city['color'] | color_i }}</td>
+            <td class="city-{{ city['color'] }}">{{ city['name'] }}</td>
+            <td>{{ city['stack'] }}</td>
+            <td class="{{ city['inf_risk'] | danger_level }}">{{ city['inf_risk'] | to_percent }}</td>
+            <td class="{{ city['epi_risk'] | danger_level }}">{{ city['epi_risk'] | to_percent }}</td>
+          </tr>
+        {%- endfor %}
+        </tbody>
+      </table>
     </div>
   {% endif %}
 {%- endmacro %}
+
+
+{% macro game_state_scripts() %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.12/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.12/js/dataTables.bootstrap.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      $('.city-table').DataTable( {
+        "paging":   false,
+        "searching  ":   false,
+        "info":     false,
+        "order":    [],
+        "columnDefs": [
+          { "visible": false, "targets": [ 0 ] },
+          { "orderData": [ 0, 1 ], "targets": [ 1 ] }
+        ]
+      })
+    })
+  </script>
+{% endmacro %}
+
 
 {% macro game_summaries(games) %}
 

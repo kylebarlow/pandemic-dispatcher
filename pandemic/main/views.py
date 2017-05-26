@@ -1,5 +1,6 @@
 import os
 import cStringIO
+import fractions
 
 from collections import defaultdict, Counter
 
@@ -15,17 +16,23 @@ from .forms import BeginForm, DrawForm, InfectForm, ReplayForm
 
 @main.app_template_filter('to_percent')
 def to_percent(v):
-    return u'{:.1f}%'.format(v * 100.0) if v > 0 else u'-'
+    return (u'{:.1f}% ({})'.format(v * 100.0, fractions.Fraction.from_float(v).limit_denominator())
+            if v > 0 else u'-')
 
 
 @main.app_template_filter('danger_level')
-def to_percent(v):
+def danger_level(v):
     if v > 0.66:
         return u'bg-danger'
     elif v > 0.33:
         return u'bg-warning'
     else:
         return u''
+
+
+@main.app_template_filter('color_i')
+def color_i(color):
+    return {'blue': 0, 'yellow': 1, 'black': 2, 'red': 3}[color]
 
 
 def get_game_state(game, draw_phase=True):

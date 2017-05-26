@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block title %}Infect Cities{% endblock %}
 
 {% block content %}
@@ -9,4 +10,9 @@
     </div>
     {{ game_macros.game_state(game_state) }}
   </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {{ game_macros.game_state_scripts() }}
 {% endblock %}
