@@ -1,9 +1,58 @@
 {% extends "base.html" %}
+{% import "macros/form.html" as form_macro %}
+
 {% block title %}Game Setup{% endblock %}
 
 {% block content %}
     {{ super() }}
     <div class="container-fluid">
-        {{ wtf.quick_form(form) }}
+        {{ form_macro.begin_form(form) }}
     </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+  <script src="{{ url_for('static', filename='js/html.sortable.js') }}"></script>
+  <script>
+
+  sortable('.js-grid', {
+    forcePlaceholderSize: true,
+    placeholderClass: 'btn col-xs-3 border',
+    connectWith: 'js-connected',
+    items: ':not(.border)'
+  });
+  sortable('.js-grid-target', {
+    forcePlaceholderSize: true,
+    placeholderClass: 'btn col-xs-12 border',
+    connectWith: 'js-connected',
+    items: ':not(.border)',
+    maxItems: 1
+  });
+
+  sortable('.js-player-grid', {
+    forcePlaceholderSize: true,
+    placeholderClass: 'li border'
+  });
+
+
+  var update_characters = function() {
+    $('ol.js-player-grid li').each(
+      function(index) {
+        $(this).find('input[type="hidden"][name$="turn_num"]').attr("value", index);
+        $(this).find('input[type="hidden"][name$="character"]')
+          .attr("value", $(this).find('div.js-grid-target > div.btn:only-child').text().trim());
+      });
+  };
+
+  sortable('.js-player-grid')[0].addEventListener('sortupdate', function(e) {
+    update_characters();
+  });
+
+  sortable('.js-grid-target')[0].addEventListener('sortupdate', function(e) {
+    update_characters();
+  });
+
+  update_characters();
+
+  </script>
 {% endblock %}

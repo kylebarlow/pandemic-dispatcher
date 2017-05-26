@@ -2,7 +2,8 @@
 
 # file of constants to keep things readable
 
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
+
 
 CITIES = OrderedDict([
     (u'Atlanta', u'blue'), (u'Chicago', u'blue'), (u'Essen', u'blue'), (u'London', u'blue'), (u'Madrid', u'blue'),
@@ -22,6 +23,20 @@ CITIES = OrderedDict([
     (u'Sydney', u'red'), (u'Taipei', u'red'), (u'Tokyo', u'red')
 ])
 
+Character = namedtuple('Character', ('first_name', 'middle_name', 'icon'))
+
+CHARACTERS = OrderedDict([
+    (u'Dispatcher', Character(u'Shinji', u'"D1sc0"', u'glyphicon-globe')),
+    (u'Researcher', Character(u'Rachel', u'R', u'glyphicon-search')),
+    (u'Quarantine Specialist', Character(u'Quincy', u'Q', u'glyphicon-alert')),
+    (u'Operations Expert', Character(u'Omar', u'Obama', u'glyphicon-home')),
+    (u'Colonel', Character(u'Carlos', u'Camino', u'glyphicon-star')),
+    (u'Generalist', Character(u'Samantha', u'Q', u'glyphicon-wrench')),
+    (u'Medic', Character(u'', u'', u'glyphicon-plus-sign')),
+    (u'Scientist', Character(u'', u'', u'glyphicon-education')),
+    (u'Smith-Soldier', Character(u'Simón', u'"Sparks"', u'glyphicon-star-empty'))
+])
+
 # months in the year
 MONTHS = [u'January', u'February', u'March', u'April', u'May', u'June',
           u'July', u'August', u'September', u'October', u'November', u'December']
@@ -30,6 +45,7 @@ INFECTION_RATES = [2, 2, 2, 3, 3, 4, 4, 9] # infection rates per epidemic
                                            # note: -1 is game setup, infect 9 cities
 
 EPIDEMICS = 5 # number of epidemics in the deck
-PLAYERS = 4 # four players, of course
+NUM_PLAYERS = 4 # four players, of course
+INITIAL_HAND_SIZE = {2: 4, 3: 3, 4: 2} # number of hands in initial hands, according to NUM_PLAYERS
 DRAW = 2 # draw two cards at a time
 CODA_COLOR = u'yellow' # color of the COdA virus
