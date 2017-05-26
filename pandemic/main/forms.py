@@ -75,8 +75,11 @@ class DrawForm(FlaskForm):
         self.cards.choices = cards
 
     def validate_cards(self, field):
-        if (self.turn_num == -1 and len(field.data) > (c.DRAW * c.NUM_PLAYERS)
-            or (self.turn_num > -1 and len(field.data) + bool(self.epidemic.data) > c.DRAW)):
+        if self.turn_num == -1 and len(field.data) > (c.DRAW * c.NUM_PLAYERS):
+            field.data = []
+            raise ValidationError(u"You drew too many cards")
+
+        if self.turn_num > -1 and (len(field.data) + bool(self.epidemic and self.epidemic.data)) > c.DRAW:
             field.data = []
             raise ValidationError(u"You drew too many cards")
 
@@ -95,10 +98,12 @@ class DrawForm(FlaskForm):
 class InfectForm(FlaskForm):
     cities = SelectMultipleField(u'Infected Cities', widget=wdg.select_cities,
                                  description=u'Cities infected this turn')
+    skip_infection = SelectMultipleField(u'Quiet night/Sacrifice', widget=wdg.authorize_vaccine,
+                                  description=u'Skip this infection step')
     submit = SubmitField(u'Submit')
     game = HiddenField(u'game_id', validators=[InputRequired()])
 
-    def __init__(self, game_state, *args, **kwargs):
+    def __init__(self, game_state, characters, *args, **kwargs):
         super(InfectForm, self).__init__(*args, **kwargs)
 
         self.game.data = game_state['game_id']
@@ -106,8 +111,10 @@ class InfectForm(FlaskForm):
         if game_state['turn_num'] == -1:
             self.epidemics = -1
             self.cities.description = u'Cities infected during setup'
+            del self.skip_infection
         else:
             self.epidemics = game_state['epidemics']
+            self.skip_infection.choices = [(ch.character.name,(u'Yes', ch.color_index)) for ch in characters]
 
         choices = []
         for i in range(1, 7):
@@ -120,9 +127,20 @@ class InfectForm(FlaskForm):
         self.cities.choices = choices
 
     def validate_cities(self, field):
-        if len(field.data) != c.INFECTION_RATES[self.epidemics]:
+        if (len(field.data) != c.INFECTION_RATES[self.epidemics]
+            and (self.skip_infection and len(self.skip_infection.data) < c.NUM_PLAYERS)):
             field.data = []
             raise ValidationError(u"You didn't infect the right number of cities")
+        if (len(field.data) > 0
+            and (self.skip_infection and len(self.skip_infection.data) == c.NUM_PLAYERS)):
+            field.data = []
+            self.skip_infection.data = []
+            raise ValidationError(u"You shouldn't be infecting any cities")
+
+    def validate_skip_infection(self, field):
+        if 0 < len(field.data) < c.NUM_PLAYERS:
+            field.data = []
+            raise ValidationError(u"All players must authorize this decision")
 
 
 class ReplayForm(FlaskForm):

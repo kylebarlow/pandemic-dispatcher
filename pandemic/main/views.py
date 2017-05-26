@@ -66,7 +66,9 @@ def get_game_state(game, draw_phase=True):
             vaccines += 1
 
         for city in sorted(turn.infections, key=lambda city: stack[city.name]):
-            assert stack[city.name] == 1 # if a city is infected too early
+            # assert stack[city.name] == 1 # if a city is infected too early
+            if stack[city.name] != 1:
+                flash(u'WARNING: looks like a city was infected too early, could be a mistake')
             stack[city.name] = 0
 
             if not any(stack[city_name] == 1 for city_name in stack):
@@ -183,8 +185,11 @@ def draw(game_id=None):
         turn = Turn(game_id=game.id, turn_num=game.turn_num, x_vaccine=False)
         db.session.add(turn)
     else:
-        turn.infections = [] # this could break the game state otherwise
+        # this could break the game state otherwise
         turn.draws = []
+        turn.epidemic = []
+        turn.infections = []
+        turn.x_vaccine = False
 
     db.session.commit()
 
@@ -193,12 +198,11 @@ def draw(game_id=None):
     form = DrawForm(game_state, game.characters)
 
     if form.validate_on_submit():
-        if game.turn_num > -1:
-            turn.x_vaccine = len(form.vaccine.data) == c.NUM_PLAYERS
-            if form.epidemic.data:
-                turn.epidemic = [City.query.filter_by(name=form.epidemic.data).first()]
-                if 'second_epidemic' in form and form.second_epidemic.data:
-                    turn.epidemic.append(City.query.filter_by(name=form.second_epidemic.data).first())
+        turn.x_vaccine = bool(form.vaccine) and len(form.vaccine.data) == c.NUM_PLAYERS
+        if form.epidemic and form.epidemic.data:
+            turn.epidemic = [City.query.filter_by(name=form.epidemic.data).first()]
+            if 'second_epidemic' in form and form.second_epidemic.data:
+                turn.epidemic.append(City.query.filter_by(name=form.second_epidemic.data).first())
 
         if form.cards.data:
             turn.draws = City.query.filter(City.name.in_(form.cards.data)).all()
@@ -233,7 +237,7 @@ def infect(game_id=None):
 
     game_state = get_game_state(game, False)
 
-    form = InfectForm(game_state)
+    form = InfectForm(game_state, game.characters)
 
     if form.validate_on_submit():
         if form.game.data != game_id:
