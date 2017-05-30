@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from flask_wtf import FlaskForm
 
 from wtforms import (Form, Field, StringField, IntegerField, BooleanField, SelectField, RadioField,
@@ -9,6 +11,9 @@ from ..models import Game, City, Turn
 
 import widgets as wdg
 
+
+def order_fields(fields, order):
+    return OrderedDict((k,fields[k]) for k in order)
 
 
 class PlayerField(Form):
@@ -59,12 +64,12 @@ class DrawForm(FlaskForm):
             del self.vaccine
         else:
             max_stack = max(city['stack'] for city in game_state['city_data'])
-            epidemic_cities = [(city['name'], city['name']) for city in game_state['city_data']
-                               if city['stack'] == max_stack]
-            self.epidemic.choices = [(u'', u'')] + epidemic_cities
+            epidemic_cities = [(u'', u'')] + [(city['name'], city['name']) for city in game_state['city_data']
+                                              if city['stack'] == max_stack]
+            self.epidemic.choices = epidemic_cities
 
             if game_state['epi_risk'] > 1.0:
-                self.second_epidemic.choices = [(u'', u'')] + epidemic_cities
+                self.second_epidemic.choices = epidemic_cities
             else:
                 del self.second_epidemic
 
@@ -95,26 +100,44 @@ class DrawForm(FlaskForm):
             raise ValidationError(u"The second epidemic can't be the same city")
 
 
-class InfectForm(FlaskForm):
+class SetupInfectForm(FlaskForm):
     cities = SelectMultipleField(u'Infected Cities', widget=wdg.select_cities,
-                                 description=u'Cities infected this turn')
-    skip_infection = SelectMultipleField(u'Quiet night/Sacrifice', widget=wdg.authorize_vaccine,
-                                  description=u'Skip this infection step')
+                                 description=u'Cities infected during setup')
     submit = SubmitField(u'Submit')
     game = HiddenField(u'game_id', validators=[InputRequired()])
 
-    def __init__(self, game_state, characters, *args, **kwargs):
-        super(InfectForm, self).__init__(*args, **kwargs)
+    def __init__(self, game_state, *args, **kwargs):
+        super(SetupInfectForm, self).__init__(*args, **kwargs)
 
         self.game.data = game_state['game_id']
+        self.epidemics = -1
+        self.cities.choices = [(city['name'], city['name']) for city in game_state['city_data']]
 
-        if game_state['turn_num'] == -1:
-            self.epidemics = -1
-            self.cities.description = u'Cities infected during setup'
-            del self.skip_infection
-        else:
-            self.epidemics = game_state['epidemics']
-            self.skip_infection.choices = [(ch.character.name,(u'Yes', ch.color_index)) for ch in characters]
+    def validate_cities(self, field):
+        if len(field.data) != c.INFECTION_RATES[self.epidemics]:
+            field.data = []
+            raise ValidationError(u"You didn't infect the right number of cities")
+
+
+class InfectForm(SetupInfectForm):
+    skip_infection = SelectMultipleField(u'Quiet night/Sacrifice', widget=wdg.authorize_vaccine,
+                                         description=u'Skip this infection step')
+    resilient_population = SelectField(u'Resilient Population',
+                                       description=u'If Resilient Population was played, select the city affected')
+
+    _order = ['cities', 'skip_infection', 'resilient_population', 'submit', 'game']
+
+    def __init__(self, game_state, characters, *args, **kwargs):
+        super(InfectForm, self).__init__(game_state, *args, **kwargs)
+
+        self.game.data = game_state['game_id']
+        self.epidemics = game_state['epidemics']
+
+        self.cities.description = u'Cities infected this turn'
+        self.skip_infection.choices = [(ch.character.name,(u'Yes', ch.color_index)) for ch in characters]
+        self.resilient_population.choices = [(u'', u'')]
+        self.resilient_population.choices.extend((city['name'], city['name']) for city in game_state['city_data']
+                                                 if city['stack'] == 0)
 
         choices = []
         for i in range(1, 7):
@@ -126,16 +149,16 @@ class InfectForm(FlaskForm):
 
         self.cities.choices = choices
 
+        self._fields = order_fields(self._fields, self._order)
+
     def validate_cities(self, field):
-        if (len(field.data) != c.INFECTION_RATES[self.epidemics]
-            and (self.skip_infection and len(self.skip_infection.data) < c.NUM_PLAYERS)):
-            field.data = []
-            raise ValidationError(u"You didn't infect the right number of cities")
-        if (len(field.data) > 0
-            and (self.skip_infection and len(self.skip_infection.data) == c.NUM_PLAYERS)):
-            field.data = []
-            self.skip_infection.data = []
-            raise ValidationError(u"You shouldn't be infecting any cities")
+        if len(self.skip_infection.data) == c.NUM_PLAYERS:
+            if len(field.data) > 0:
+                field.data = []
+                self.skip_infection.data = []
+                raise ValidationError(u"You shouldn't be infecting any cities")
+        else:
+            super(InfectForm, self).validate_cities(field)
 
     def validate_skip_infection(self, field):
         if 0 < len(field.data) < c.NUM_PLAYERS:
