@@ -3,7 +3,12 @@
 {% block title %}Game History for {{ game.id }}{% endblock %}
 
 {% block content %}
-    {{ super() }}
-    {{ game_macros.game_history(game) }}
-    {{ game_macros.game_state(game_state) }}
+  {{ super() }}
+  {{ game_macros.game_history(game) }}
+  {{ game_macros.game_state(game_state) }}
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {{ game_macros.game_state_scripts() }}
 {% endblock %}

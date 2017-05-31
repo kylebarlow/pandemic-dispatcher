@@ -4,14 +4,14 @@
 {% block title %}Game Setup{% endblock %}
 
 {% block content %}
-    {{ super() }}
-    <div class="container-fluid">
-        {{ form_macro.begin_form(form) }}
-    </div>
+  {{ super() }}
+  <div class="container-fluid">
+    {{ form_macro.begin_form(form) }}
+  </div>
 {% endblock %}
 
 {% block scripts %}
-{{ super() }}
+  {{ super() }}
   <script src="{{ url_for('static', filename='js/html.sortable.js') }}"></script>
   <script>
 

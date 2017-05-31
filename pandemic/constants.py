@@ -26,7 +26,7 @@ CITIES = OrderedDict([
 Character = namedtuple('Character', ('first_name', 'middle_name', 'icon'))
 
 CHARACTERS = OrderedDict([
-    (u'Dispatcher', Character(u'Shinji', u'"D1sc0"', u'glyphicon-globe')),
+    (u'TRAITOR', Character(u'Shinji', u'"Judas"', u'glyphicon-fire')),
     (u'Researcher', Character(u'Rachel', u'R', u'glyphicon-search')),
     (u'Quarantine Specialist', Character(u'Quincy', u'Q', u'glyphicon-alert')),
     (u'Operations Expert', Character(u'Omar', u'Obama', u'glyphicon-home')),

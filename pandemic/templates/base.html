@@ -6,15 +6,16 @@
 
 {% block title %}Pandemic Legacy 0.1{% endblock %}
 {% block head %}
-{{ super() }}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
-<link rel="icon" type="image/png" href="{{ url_for('static', filename='biohazard.png') }}">
+  {{ super() }}
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.12/css/dataTables.bootstrap.min.css">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='biohazard.png') }}">
 {% endblock %}
 
 {% block navbar %}
-{{nav.navbar.render()}}
+  {{nav.navbar.render()}}
 {% endblock %}
 
 {% block content %}
-    {{ util.flashed_messages() }}
+  {{ util.flashed_messages() }}
 {% endblock %}

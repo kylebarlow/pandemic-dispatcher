@@ -1,11 +1,18 @@
 {% extends "base.html" %}
+
 {% block title %}Infect Cities{% endblock %}
+
 {% block content %}
-    {{ super() }}
-    <div class="container-fluid">
-        <div class="container">
-            {{ wtf.quick_form(form) }}
-        </div>
-        {{ game_macros.game_state(game_state) }}
+  {{ super() }}
+  <div class="container-fluid">
+    <div class="container">
+      {{ wtf.quick_form(form) }}
     </div>
+    {{ game_macros.game_state(game_state) }}
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {{ game_macros.game_state_scripts() }}
 {% endblock %}

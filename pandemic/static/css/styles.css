@@ -22,28 +22,28 @@ body{
 
 /* general */
 
-div.city-blue {
+.city-blue {
   background: #0069AA;
   color: #FFFFFF;
   text-align: center;
   border-radius: 3px !important;
 }
 
-div.city-red {
+.city-red {
   background: #E41937;
   color: #FFFFFF;
   text-align: center;
   border-radius: 3px !important;
 }
 
-div.city-black {
+.city-black {
   background: #000000;
   color: #FFFFFF;
   text-align: center;
   border-radius: 3px !important;
 }
 
-div.city-yellow {
+.city-yellow {
   background: #FFF56F;
   color: #000000;
   text-align: center;
@@ -58,15 +58,11 @@ div.game-state {
   text-align: right;
 }
 
-div.game-state > div.gs-header {
+tr.gs-header {
   text-align: center;
 }
 
-div.game-state > div.row {
-  margin: 2px;
-}
-
-div.game-state div.row.discard {
+div.game-state tr.discard {
   opacity: 0.4;
 }
 

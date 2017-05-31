@@ -70,7 +70,7 @@ class City(db.Model):
     infections = db.relationship('Turn', secondary=infections, lazy=True, backref='infections')
     # turns when this city was drawn as a player card
     draws = db.relationship('Turn', secondary=draws, lazy=True, backref='draws')
-    # turns when this was city was drawn an epidemic
+    # turns when this city was drawn as an epidemic
     epidemics = db.relationship('Turn', secondary=epidemics, lazy=True, backref='epidemic')
 
     def __repr__(self):
@@ -83,6 +83,10 @@ class Turn(db.Model):
     turn_num = db.Column(db.Integer)  # which turn this is
     game_id = db.Column(db.Integer, db.ForeignKey('games.id'), nullable=False)
     x_vaccine = db.Column(db.Boolean, nullable=False) # was an experimental vaccine used?
+
+    # turns when this city was exiled using resilient population (one-to-many)
+    res_pop_id = db.Column(db.Integer, db.ForeignKey('cities.id'), nullable=True)
+    resilient_pop = db.relationship('City', lazy=True, backref='resilient_pops')
 
     def __repr__(self):
         return u'<Turn {}: {} infected, {} drawn>'.format(self.turn_num,

@@ -1,5 +1,6 @@
 import os
 import cStringIO
+import fractions
 
 from collections import defaultdict, Counter
 
@@ -10,22 +11,28 @@ from .. import db
 from .. import constants as c
 from ..models import Game, City, Turn, PlayerSession, Character
 
-from .forms import BeginForm, DrawForm, InfectForm, ReplayForm
+from .forms import BeginForm, DrawForm, SetupInfectForm, InfectForm, ReplayForm
 
 
 @main.app_template_filter('to_percent')
 def to_percent(v):
-    return u'{:.1f}%'.format(v * 100.0) if v > 0 else u'-'
+    return (u'{:.1f}% ({})'.format(v * 100.0, fractions.Fraction.from_float(v).limit_denominator())
+            if v > 0 else u'-')
 
 
 @main.app_template_filter('danger_level')
-def to_percent(v):
+def danger_level(v):
     if v > 0.66:
         return u'bg-danger'
     elif v > 0.33:
         return u'bg-warning'
     else:
         return u''
+
+
+@main.app_template_filter('color_i')
+def color_i(color):
+    return {'blue': 0, 'yellow': 1, 'black': 2, 'red': 3}[color]
 
 
 def get_game_state(game, draw_phase=True):
@@ -53,20 +60,22 @@ def get_game_state(game, draw_phase=True):
     for turn in turns:
         drawn_cards.update(city.name for city in turn.draws)
 
-        if turn.epidemic:
-            epidemics += 1
-            stack[turn.epidemic[0].name] = 0
-            stack = {city_name:(stack[city_name] + 1) for city_name in stack}
-            if len(turn.epidemic) == 2:
-                epidemics += 1
-                stack[turn.epidemic[1].name] = 0
-                stack = {city_name: (stack[city_name] + 1) for city_name in stack}
+        if turn.resilient_pop:
+            stack[turn.resilient_pop.name] = -1
 
         if turn.x_vaccine:
             vaccines += 1
 
+        if turn.epidemic:
+            epidemics += 1
+            stack[turn.epidemic[0].name] = 0
+            stack = {city_name:(s + (s >= 0)) for city_name,s in stack.items()}
+            if len(turn.epidemic) == 2:
+                epidemics += 1
+                stack[turn.epidemic[1].name] = 0
+                stack = {city_name: (s + (s >= 0)) for city_name, s in stack.items()}
+
         for city in sorted(turn.infections, key=lambda city: stack[city.name]):
-            # assert stack[city.name] == 1 # if a city is infected too early
             if stack[city.name] != 1:
                 flash(u'WARNING: looks like a city was infected too early, could be a mistake')
             stack[city.name] = 0
@@ -124,7 +133,7 @@ def get_game_state(game, draw_phase=True):
     epi_probs = defaultdict(float, {city_name: 1.0 / len(stack_d[max_i]) for city_name in stack_d[max_i]})
 
     city_data = [dict(name=city_name, color=city_color,
-                      discard=(city_name in stack_d[0]),
+                      discard=(stack[city_name] < 1),
                       stack=stack[city_name],
                       inf_risk=city_probs[city_name],
                       epi_risk=epi_probs[city_name],
@@ -182,7 +191,7 @@ def draw(game_id=None):
 
     turn = Turn.query.filter_by(game_id=game.id, turn_num=game.turn_num).one_or_none()
     if turn is None:
-        turn = Turn(game_id=game.id, turn_num=game.turn_num, x_vaccine=False)
+        turn = Turn(game_id=game.id, turn_num=game.turn_num, x_vaccine=False, resilient_pop=None)
         db.session.add(turn)
     else:
         # this could break the game state otherwise
@@ -237,7 +246,10 @@ def infect(game_id=None):
 
     game_state = get_game_state(game, False)
 
-    form = InfectForm(game_state, game.characters)
+    if game.turn_num == -1:
+        form = SetupInfectForm(game_state)
+    else:
+        form = InfectForm(game_state, game.characters)
 
     if form.validate_on_submit():
         if form.game.data != game_id:
@@ -246,6 +258,9 @@ def infect(game_id=None):
 
         if form.cities.data:
             this_turn.infections = City.query.filter(City.name.in_(form.cities.data)).all()
+
+        if 'resilient_population' in form and form.resilient_population.data:
+            this_turn.resilient_pop = City.query.filter_by(name=form.resilient_population.data).first()
 
         game.turn_num += 1
         db.session.commit()
