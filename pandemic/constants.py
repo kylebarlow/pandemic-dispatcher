@@ -34,7 +34,8 @@ CHARACTERS = OrderedDict([
     (u'Generalist', Character(u'Samantha', u'Q', u'glyphicon-wrench')),
     (u'Medic', Character(u'', u'', u'glyphicon-plus-sign')),
     (u'Scientist', Character(u'', u'', u'glyphicon-education')),
-    (u'Smith-Soldier', Character(u'Simón', u'"Sparks"', u'glyphicon-star-empty'))
+    (u'Smith-Soldier', Character(u'Simón', u'"Sparks"', u'glyphicon-star-empty')),
+    (u'Virologist', Character(u'Victoria', u'"Valkyrie"', u'glyphicon-certificate'))
 ])
 
 # months in the year
