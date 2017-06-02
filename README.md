@@ -1,4 +1,4 @@
-# pandemic-dispatcher
+# pandemic-~~dispatcher~~JUDAS
 
 This is an ever-so-slightly overbuilt online assistant for the board game [Pandemic Legacy](http://www.zmangames.com/store/p31/Pandemic_Legacy.html). This was built for a specific gaming group and may contain **spoilers**, so be warned!
 
