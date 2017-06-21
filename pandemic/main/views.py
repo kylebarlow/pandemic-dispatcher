@@ -6,12 +6,12 @@ from collections import defaultdict, Counter
 
 from flask import g, session, render_template, redirect, url_for, flash
 
-from . import main
 from .. import db
 from .. import constants as c
 from ..models import Game, City, Turn, PlayerSession, Character
 
-from .forms import BeginForm, DrawForm, SetupInfectForm, InfectForm, ReplayForm
+from . import main
+from . import forms
 
 
 @main.app_template_filter('to_percent')
@@ -60,20 +60,22 @@ def get_game_state(game, draw_phase=True):
     for turn in turns:
         drawn_cards.update(city.name for city in turn.draws)
 
-        if turn.resilient_pop:
-            stack[turn.resilient_pop.name] = -1
-
         if turn.x_vaccine:
             vaccines += 1
 
         if turn.epidemic:
             epidemics += 1
             stack[turn.epidemic[0].name] = 0
-            stack = {city_name:(s + (s >= 0)) for city_name,s in stack.items()}
+            if not draw_phase:
+                stack = {city_name:(s + (s >= 0)) for city_name,s in stack.items()}
             if len(turn.epidemic) == 2:
                 epidemics += 1
                 stack[turn.epidemic[1].name] = 0
-                stack = {city_name: (s + (s >= 0)) for city_name, s in stack.items()}
+                if not draw_phase:
+                    stack = {city_name: (s + (s >= 0)) for city_name, s in stack.items()}
+
+        if turn.resilient_pop:
+            stack[turn.resilient_pop.name] = -1
 
         for city in sorted(turn.infections, key=lambda city: stack[city.name]):
             if stack[city.name] != 1:
@@ -147,7 +149,7 @@ def get_game_state(game, draw_phase=True):
 
 @main.route('/', methods=('GET', 'POST'))
 def begin():
-    form = BeginForm()
+    form = forms.BeginForm()
 
     if form.validate_on_submit():
         game = Game(month=form.month.data,
@@ -204,7 +206,7 @@ def draw(game_id=None):
 
     game_state = get_game_state(game)
 
-    form = DrawForm(game_state, game.characters)
+    form = forms.DrawForm(game_state, game.characters)
 
     if form.validate_on_submit():
         turn.x_vaccine = bool(form.vaccine) and len(form.vaccine.data) == c.NUM_PLAYERS
@@ -218,12 +220,51 @@ def draw(game_id=None):
 
         db.session.commit()
 
+        if form.resilient_population and len(form.resilient_population.data) == c.NUM_PLAYERS:
+            return redirect(url_for('.resilientpop'))
+        else:
+            return redirect(url_for('.infect'))
+
+    return render_template("base_form.html", title=u'Draw Cards', game_state=game_state, form=form)
+
+
+@main.route('/resilientpop', methods=('GET', 'POST'))
+def resilientpop():
+    if session.get('game_id', None) is None:
+        flash(u'No game in progress', 'error')
+        return redirect(url_for('.begin'))
+
+    game_id = session['game_id']
+    game = Game.query.filter_by(id=game_id).first()
+    if game is None:
+        flash(u'No game with that ID', 'error')
+        session['game_id'] = None
+        return redirect(url_for('.begin'))
+
+    this_turn = Turn.query.filter_by(game_id=game.id, turn_num=game.turn_num).one_or_none()
+    if this_turn is None:
+        flash(u'Need to draw cards first', 'error')
+        return redirect(url_for('.draw'))
+
+    game_state = get_game_state(game)
+
+    form = forms.ResilientPopForm(game_state)
+
+    if form.validate_on_submit():
+        if form.game.data != game_id:
+            flash(u'Game ID did not match session', 'error')
+            return redirect(url_for('.begin'))
+
+        this_turn.resilient_pop = City.query.filter_by(name=form.resilient_city.data).first()
+        db.session.commit()
+
         return redirect(url_for('.infect'))
 
-    return render_template("draw.html", game_state=game_state, form=form)
+    return render_template("base_form.html", title=u'Select Resilient City', game_state=game_state, form=form)
 
 
-@main.route('/infect/', methods=('GET', 'POST'))
+
+@main.route('/infect', methods=('GET', 'POST'))
 @main.route('/infect/<int:game_id>', methods=('GET', 'POST'))
 def infect(game_id=None):
     if not (game_id or session.get('game_id', None)):
@@ -247,9 +288,9 @@ def infect(game_id=None):
     game_state = get_game_state(game, False)
 
     if game.turn_num == -1:
-        form = SetupInfectForm(game_state)
+        form = forms.SetupInfectForm(game_state)
     else:
-        form = InfectForm(game_state, game.characters)
+        form = forms.InfectForm(game_state, game.characters)
 
     if form.validate_on_submit():
         if form.game.data != game_id:
@@ -259,15 +300,12 @@ def infect(game_id=None):
         if form.cities.data:
             this_turn.infections = City.query.filter(City.name.in_(form.cities.data)).all()
 
-        if 'resilient_population' in form and form.resilient_population.data:
-            this_turn.resilient_pop = City.query.filter_by(name=form.resilient_population.data).first()
-
         game.turn_num += 1
         db.session.commit()
 
         return redirect(url_for('.draw'))
 
-    return render_template("infect.html", game_state=game_state, form=form)
+    return render_template("base_form.html", title=u'Infect Cities', game_state=game_state, form=form)
 
 
 @main.route('/history')
@@ -294,7 +332,7 @@ def replay(game_id, turn_num):
         flash(u'No game with that ID', 'error')
         return redirect(url_for('.begin'))
 
-    form = ReplayForm(game_id, game.characters)
+    form = forms.ReplayForm(game_id, game.characters)
 
     if form.validate_on_submit():
         if len(form.authorize.data) == c.NUM_PLAYERS:
@@ -307,4 +345,4 @@ def replay(game_id, turn_num):
             flash(u'A replay was not authorized')
             return redirect(url_for('.game_history', game_id=form.game.data))
 
-    return render_template("replay.html", form=form)
+    return render_template("base_form.html", title=u'Redo Turn', form=form)

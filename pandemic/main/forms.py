@@ -46,6 +46,8 @@ class DrawForm(FlaskForm):
                                   description=u'Authorization required for experimental vaccine')
     cards = SelectMultipleField(u'COdA-403b Player Cards', widget=wdg.select_cities,
                                 description=u'{} city cards drawn'.format(c.CODA_COLOR.capitalize()))
+    resilient_population = SelectMultipleField(u'Resilient Population', widget=wdg.authorize_vaccine,
+                                               description=u'Authorize Resilient Population')
     submit = SubmitField(u'Submit')
     game = HiddenField(u'game_id', validators=[InputRequired()])
 
@@ -62,6 +64,7 @@ class DrawForm(FlaskForm):
             del self.epidemic
             del self.second_epidemic
             del self.vaccine
+            del self.resilient_population
         else:
             max_stack = max(city['stack'] for city in game_state['city_data'])
             epidemic_cities = [(u'', u'')] + [(city['name'], city['name']) for city in game_state['city_data']
@@ -73,7 +76,8 @@ class DrawForm(FlaskForm):
             else:
                 del self.second_epidemic
 
-            self.vaccine.choices = [(ch.character.name,(u'Yes', ch.color_index)) for ch in characters]
+            self.vaccine.choices = [(ch.character.name, (u'Yes', ch.color_index)) for ch in characters]
+            self.resilient_population.choices = [(ch.character.name, (u'Yes', ch.color_index)) for ch in characters]
 
         cards = [(city['name'], city['name']) for city in game_state['city_data']
                  if city['color'] == c.CODA_COLOR and not city['drawn']]
@@ -92,6 +96,11 @@ class DrawForm(FlaskForm):
         if 0 < len(field.data) < c.NUM_PLAYERS:
             field.data = []
             raise ValidationError(u"All players must authorize an experimental vaccine")
+
+    def validate_resilient_population(self, field):
+        if 0 < len(field.data) < c.NUM_PLAYERS:
+            field.data = []
+            raise ValidationError(u"All players must authorize Resilient Population")
 
     def validate_second_epidemic(self, field):
         if field.data and not self.epidemic.data:
@@ -122,10 +131,8 @@ class SetupInfectForm(FlaskForm):
 class InfectForm(SetupInfectForm):
     skip_infection = SelectMultipleField(u'Quiet night/Sacrifice', widget=wdg.authorize_vaccine,
                                          description=u'Skip this infection step')
-    resilient_population = SelectField(u'Resilient Population',
-                                       description=u'If Resilient Population was played, select the city affected')
 
-    _order = ['cities', 'skip_infection', 'resilient_population', 'submit', 'game']
+    _order = ['cities', 'skip_infection', 'submit', 'game']
 
     def __init__(self, game_state, characters, *args, **kwargs):
         super(InfectForm, self).__init__(game_state, *args, **kwargs)
@@ -135,9 +142,6 @@ class InfectForm(SetupInfectForm):
 
         self.cities.description = u'Cities infected this turn'
         self.skip_infection.choices = [(ch.character.name,(u'Yes', ch.color_index)) for ch in characters]
-        self.resilient_population.choices = [(u'', u'')]
-        self.resilient_population.choices.extend((city['name'], city['name']) for city in game_state['city_data']
-                                                 if city['stack'] == 0)
 
         choices = []
         for i in range(1, 7):
@@ -164,6 +168,20 @@ class InfectForm(SetupInfectForm):
         if 0 < len(field.data) < c.NUM_PLAYERS:
             field.data = []
             raise ValidationError(u"All players must authorize this decision")
+
+
+class ResilientPopForm(FlaskForm):
+    resilient_city = SelectField(u'Resilient City',
+                                 description=u'Select the city chosen for resiliency')
+    submit = SubmitField(u'Submit')
+    game = HiddenField(u'game_id', validators=[InputRequired()])
+
+    def __init__(self, game_state, *args, **kwargs):
+        super(ResilientPopForm, self).__init__(*args, **kwargs)
+
+        self.game.data = game_state['game_id']
+        self.resilient_city.choices = [(city['name'], city['name']) for city in game_state['city_data']
+                                       if city['stack'] == 0]
 
 
 class ReplayForm(FlaskForm):

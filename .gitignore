@@ -123,6 +123,3 @@ ENV/
 
 # Rope project settings
 .ropeproject
-
-# ignoring this file because it's better to keep it up-to-date elsewhere
-pandemic/static/js/html.sortable.js
